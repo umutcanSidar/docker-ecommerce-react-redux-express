@@ -1,0 +1,10 @@
+@import "node_modules/uikit/dist/css/uikit";
+
+* {
+  margin: 0;
+  padding: 0;
+}
+
+.fill[data-uk-icon='star'] svg polygon {
+  fill: #faa05a;
+}
