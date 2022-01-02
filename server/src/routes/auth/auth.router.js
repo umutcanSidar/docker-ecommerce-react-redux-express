@@ -4,6 +4,8 @@ import config from "../../config";
 import User from "../../models/user.model";
 import crypto from "crypto";
 
+import { getToken } from "../../utils";
+
 const route = () => {
   const router = new express.Router();
 
@@ -14,7 +16,7 @@ const route = () => {
       // FIND USER
       User.findOne({ username: username }).then((user) => {
         if (!user) {
-          res.status(401).send({ message: "Kullanıcı adı veya şifre yanlış!" });
+          res.status(401).send({ message: "Username or password is wrong!" });
         } else {
           if (
             user.password ===
@@ -23,22 +25,21 @@ const route = () => {
               .update(password)
               .digest("hex")
           ) {
-            // CREATED TOKEN
-            const token = jwt.sign({ userId: user._id }, config.apiSecretKey);
+            const accessToken = getToken(user, "1d");
             // LAST LOGIN UPDATED DATE
             User.updateOne(
-              { username: username },
+              { username: user.username },
               {
                 $set: {
                   last_login: new Date(),
+                  accessToken: accessToken
                 },
               }
             ).then(() => {});
-
             res.status(200).send({
-              token: token,
+              token: accessToken,
               username: user.username,
-              userId: user._id,
+              roleID: user.roleID,
             });
           }
         }
@@ -51,7 +52,7 @@ const route = () => {
   });
 
   router.route("/register").post((req, res) => {
-    const { username, email, password, name } = req.body;
+    const { username, email, password, name, role } = req.body;
     // FIND USER
     User.findOne({ username: username }).then((user) => {
       // SEARCH USER IF NOT USER SAVED
@@ -65,19 +66,23 @@ const route = () => {
             .update(password)
             .digest("hex"),
           created_date: Date.now(),
+          roleID: role || "basic"
         });
-
+        // SET ACCESSTOKEN ON DB
+        const accessToken = getToken(user, "1d");
+        newUser.accessToken = accessToken;
+        // SAVE USER
         newUser.save().then(
           (data) => {
             res.status(201).send({
-              message: "Registered success",
               data: data,
+              accessToken
             });
           },
           (err) => {
             res.status(304).send({
-              message: "Registered failed",
               err: err,
+              message: "Registered failed",
             });
           }
         );

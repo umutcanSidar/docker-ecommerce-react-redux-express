@@ -7,16 +7,45 @@ import Orders from "../../models/order.model";
 const route = () => {
   const router = new express.Router();
 
-  // O
+  // PAYMENT
   router.route("/").post((req, res) => {
-    const { userInfo, cartItems, shipping, paymentInfo, ip } = req.body;
-    User.findById({ _id: userInfo.userId }).then((user) => {
+    const { userInfo, cartItems, shipping, paymentInfo } = req.body;
+    let { getIp } = req.body;
+    User.findById({ _id: req.user._id }).then((user) => {
       if (user) {
         const iyzipay = new Iyzipay({
           apiKey: config.apiKey,
           secretKey: config.secretKey,
           uri: config.uri,
         });
+
+        // const getLastLogin = user.last_login;
+
+        const lastLogin =
+          user.last_login.getUTCFullYear() +
+          "-" +
+          ("0" + (user.last_login.getUTCMonth() + 1)).slice(-2) +
+          "-" +
+          ("0" + user.last_login.getUTCDate()).slice(-2) +
+          " " +
+          ("0" + user.last_login.getUTCHours() + 3).slice(-2) +
+          ":" +
+          ("0" + user.last_login.getUTCMinutes()).slice(-2) +
+          ":" +
+          ("0" + user.last_login.getUTCSeconds()).slice(-2);
+
+        const createdDate =
+          user.created_date.getUTCFullYear() +
+          "-" +
+          ("0" + (user.created_date.getUTCMonth() + 1)).slice(-2) +
+          "-" +
+          ("0" + user.created_date.getUTCDate()).slice(-2) +
+          " " +
+          ("0" + user.created_date.getUTCHours() + 3).slice(-2) +
+          ":" +
+          ("0" + user.created_date.getUTCMinutes()).slice(-2) +
+          ":" +
+          ("0" + user.created_date.getUTCSeconds()).slice(-2);
 
         const request = {
           locale: Iyzipay.LOCALE.TR,
@@ -43,27 +72,26 @@ const route = () => {
             gsmNumber: shipping.tel,
             email: shipping.email,
             identityNumber: shipping.tcNo,
-            lastLoginDate: "2015-10-05 12:43:35",
-            registrationDate: "2013-04-21 15:12:09",
-            registrationAddress:
-              "Nidakule Göztepe, Merdivenköy Mah. Bora Sok. No:1",
+            lastLoginDate: lastLogin,
+            registrationDate: createdDate,
+            registrationAddress: shipping.street,
             ip: "85.34.78.112",
-            city: "Istanbul",
-            country: "Turkey",
+            city: shipping.city,
+            country: shipping.country,
             zipCode: "34732",
           },
           shippingAddress: {
             contactName: shipping.firstname,
             city: shipping.city,
-            country: "Turkey",
-            address: "Nidakule Göztepe, Merdivenköy Mah. Bora Sok. No:1",
+            country: shipping.country,
+            address: shipping.street,
             zipCode: "34742",
           },
           billingAddress: {
             contactName: shipping.firstname,
             city: shipping.city,
-            country: "Turkey",
-            address: "Nidakule Göztepe, Merdivenköy Mah. Bora Sok. No:1",
+            country: shipping.country,
+            address: shipping.street,
             zipCode: "34742",
           },
           basketItems: cartItems.map((data) => {
@@ -80,9 +108,10 @@ const route = () => {
 
         iyzipay.payment.create(request, function (err, result) {
           res.status(200).send(result);
+
           const newOrder = new Orders({
             user: user._id,
-            ip: ip,
+            ip: getIp,
             basketItems: cartItems,
             installment: 1,
             billingAddress: shipping.street,

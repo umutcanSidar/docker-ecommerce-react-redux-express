@@ -23,6 +23,14 @@ const UserSchema = new Schema({
   last_login: {
     type: Date,
     default: Date.now(),
+  },
+  roleID: {
+    type: String,
+    default: "basic",
+    enum: ["superuser", "admin", "basic"]
+  },
+  accessToken: {
+    type: String
   }
 });
 

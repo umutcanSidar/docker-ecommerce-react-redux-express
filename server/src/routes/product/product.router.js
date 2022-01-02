@@ -16,7 +16,7 @@ const route = () => {
       }
     });
   });
-  // GET PRODUCT BY :id
+  // GET SINGLE PRODUCT BY :id
   router.route("/:id").get((req, res) => {
     const id = req.params.id;
 
@@ -32,46 +32,7 @@ const route = () => {
       });
     }
   });
-  // POST PRODUCT
-  router.route("/").post((req, res) => {
-    const {
-      name,
-      category,
-      image,
-      price,
-      brand,
-      rating,
-      numReview,
-      countInStock,
-    } = req.body;
-
-    const newProduct = new Product({
-      name: name,
-      category: category,
-      image: image,
-      price: price,
-      brand: brand,
-      rating: rating,
-      numReview: numReview,
-      countInStock: countInStock ? countInStock : 1,
-    });
-
-    newProduct.save().then(
-      (data) => {
-        res.status(200).send({
-          message: "Product add success.",
-          data: data,
-        });
-      },
-      (err) => {
-        res.status({
-          message: "Product fail",
-          err: err,
-        });
-      }
-    );
-  });
-
+  
   return router;
 };
 

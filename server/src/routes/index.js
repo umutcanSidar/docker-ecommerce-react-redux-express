@@ -2,7 +2,8 @@ import AuthRouter from './auth/auth.router'
 import ProductRouter from './product/product.router'
 import UserRouter from './user/users.router'
 import OrderRouter from './orders/orders.router'
-import { isAuth } from '../utils';
+import AdminRouter from './admin/admin.router'
+import { isAdmin, isAuth } from '../utils';
 
 const AppRoutes = (app) => {
     // LOGIN - LOGOUT ROUTER
@@ -12,8 +13,9 @@ const AppRoutes = (app) => {
     // USERS ROUTER
     app.use(UserRouter.routePrefix,isAuth,UserRouter.route()),
     // ORDERS ROUTER
-    app.use(OrderRouter.routePrefix,isAuth,OrderRouter.route())
-
+    app.use(OrderRouter.routePrefix,isAuth,OrderRouter.route()),
+    // ROLE
+    app.use(AdminRouter.routePrefix,isAuth,isAdmin,AdminRouter.route())
 }
 
 export default AppRoutes;
